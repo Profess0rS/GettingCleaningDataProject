@@ -1,0 +1,61 @@
+library(data.table)
+##Get the Data
+
+	setwd("~/UCI HAR Dataset/train")
+	trainSubject<-read.table("subject_train.txt",sep='\t',quote="", header=TRUE)
+	trainData<-read.table("X_train.txt",sep="",quote="", header=TRUE)
+	trainLabels<-read.table("y_train.txt",sep='\t',quote="", header=TRUE)
+
+
+	setwd("~/UCI HAR Dataset/test")
+	testSubject<-read.table("subject_test.txt",sep='\t',quote="", header=TRUE)
+	testData<-read.table("X_test.txt",sep="",quote="", header=TRUE)
+	testLabels<-read.table("y_test.txt",sep='\t',quote="", header=TRUE)
+
+
+	setwd("~/UCI HAR Dataset")
+	freq<-read.table("features.txt",sep="",quote="", header=FALSE,row.names=1)
+	activity<-read.table("activity_labels.txt",sep="",quote="", header=FALSE)
+
+##Rename Columns in Train and assemble the Training Dataset
+	colnames(trainData)<-t(freq)
+	colnames(trainSubject)<-"Subject"
+	colnames(trainLabels)<-"Activity"
+
+	DataSetTrain<-cbind(trainSubject,trainLabels,trainData)
+
+##Rename Columns in Test and assemble the Test Dataset
+	colnames(testData)<-t(freq)
+	colnames(testSubject)<-"Subject"
+	colnames(testLabels)<-"Activity"
+
+	DataSetTest<-cbind(testSubject,testLabels,testData)
+
+##Assemble the full Data
+	FullData<-rbind(DataSetTrain, DataSetTest)
+
+##Mean and Std. measurements for the core signals
+	MeanSTDCoreSignals<-FullData[,c(1,2,
+		grep("(tBodyGyro-mean)"  ,colnames(FullData)), grep("(tBodyGyro-std)"  , colnames(FullData)),
+		grep("(tGravityAcc-mean)",colnames(FullData)), grep("(tGravityAcc-std)", colnames(FullData)),
+		grep("(tBodyAcc-mean)"   ,colnames(FullData)), grep("(tBodyAcc-std)"   , colnames(FullData))   )]
+
+##Replace Activity code with Activity name
+	MeanSTDCoreSignals<-merge(MeanSTDCoreSignals, activity, by.x="Activity", by.y="V1", all.x=TRUE)
+	MeanSTDCoreSignals<-MeanSTDCoreSignals[,-1]
+	MeanSTDCoreSignals<-MeanSTDCoreSignals[,c(20,1:19)]
+	
+
+##Rename the field names so they are not encrypted
+
+setnames(MeanSTDCoreSignals,"V2","Activity")
+names(MeanSTDCoreSignals) <- gsub("tBodyGyro", "TimeBodyGyro", names(MeanSTDCoreSignals)) 
+names(MeanSTDCoreSignals) <- gsub("tGravityAcc", "TimeGravityAccelerometer", names(MeanSTDCoreSignals))
+names(MeanSTDCoreSignals) <- gsub("tBodyAcc", "TimeBodyAccelerometer", names(MeanSTDCoreSignals))
+names(MeanSTDCoreSignals) <- gsub("(-mean\\(\\)\\-)", ".Mean", colnames(MeanSTDCoreSignals))
+names(MeanSTDCoreSignals) <- gsub("(-std\\(\\)\\-)", ".StdDev", names(MeanSTDCoreSignals))
+
+TidyMeanSTDCoreSignals<-aggregate(as.matrix(MeanSTDCoreSignals[,3:20]),as.list(MeanSTDCoreSignals[,1:2]), data=MeanSTDCoreSignals, FUN=mean)
+
+write.table(TidyMeanSTDCoreSignals, "TidyMeanSTDCoreSignals.txt", sep='\t', row.names=FALSE)
+
