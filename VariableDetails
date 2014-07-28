@@ -1,0 +1,20 @@
+The script begins by reading each part of the complete data set required. 
+The following data is read:
+1.	Frequency Labels
+2.	Activity Labels
+3.	Training Subject
+4.	Training Data
+5.	Training Activity
+6.	Test Subject
+7.	Test Data
+8.	Test Activity
+The training and test datasets need to be built up before they are combined into one set.
+To build these two datasets the following is done to both test and training data independently:
+1.	Frequency labels are transposed and assigned as column names to the data
+2.	cbind is used to assemble the activity code, subject number, and the data
+The two datasets are then combined through rbind to create one full dataset.
+The select columns for mean and standard deviation to include in the tidy data set are selected based on what is determined to be the Core Signals based on the frequency details documentation.  grep is used to identify the signals and ensure the X,Y, and Z axis signals are all captured for both the mean and standard deviation.
+The activity code is now replaced with the actual activity so that the data can be more easily read/identified.  This is done through merge.  In addition, columns are rearranged to have the attributes on the left and all the data on the right.
+The signal names are renamed to be more user-friendly with the use of Camel naming convention.  As a result the type of signal is followed by the identification of whether that is a mean or standard deviation followed by X, Y, or Z to identify the axis of the signal.
+Finally, the signals are aggregated to calculate the mean of the mean and standard deviation of the signals for each activity and subject and outputted to a text file that is tab delimited.
+
